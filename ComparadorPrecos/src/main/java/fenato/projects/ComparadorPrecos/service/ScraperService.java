@@ -16,10 +16,18 @@ public class ScraperService {
         try {
             // 1. Finge ser um navegador real para evitar bloqueios simples
             Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                    .timeout(10000) // Aguarda até 10 segundos
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                    .header("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
+                    .header("Connection", "keep-alive")
+                    .header("Upgrade-Insecure-Requests", "1")
+                    .header("Sec-Fetch-Dest", "document")
+                    .header("Sec-Fetch-Mode", "navigate")
+                    .header("Sec-Fetch-Site", "none")
+                    .header("Sec-Fetch-User", "?1")
+                    .header("Cache-Control", "max-age=0")
+                    .timeout(15000) // Dá 15 segundos para carregar e não dar erro de timeout
                     .get();
-
             // 2. Busca o elemento no HTML usando o seletor CSS
             Element elementoPreco = doc.selectFirst(seletorCss);
 
@@ -62,11 +70,22 @@ public class ScraperService {
         try {
             Document doc = Jsoup.connect(urlBusca)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-                    .header("Accept-Language", "pt-BR,pt;q=0.9")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                    .header("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
+                    .header("Connection", "keep-alive")
+                    .header("Upgrade-Insecure-Requests", "1")
+                    .header("Sec-Fetch-Dest", "document")
+                    .header("Sec-Fetch-Mode", "navigate")
+                    .header("Sec-Fetch-Site", "none")
+                    .header("Sec-Fetch-User", "?1")
+                    .header("Cache-Control", "max-age=0")
+                    .timeout(15000) // Dá 15 segundos para carregar e não dar erro de timeout
                     .get();
 
-            Elements cardsDeProduto = doc.select(".ui-search-layout__item, .ui-search-result__wrapper");
+            System.out.println("[DEBUG] Título da página: " + doc.title());
+            System.out.println("[DEBUG] O HTML baixado pelo robô tem a classe? " + doc.html().contains("ui-search-layout__item"));
+
+            Elements cardsDeProduto = doc.select(".ui-search-layout__item");
             System.out.println("[SCRAPER] Encontramos " + cardsDeProduto.size() + " produtos! Salvando no Neon DB...");
 
             for (Element card : cardsDeProduto) {
@@ -82,11 +101,20 @@ public class ScraperService {
                     String precoLimpo = precoTexto.replace(".", "").replace(",", ".");
                     java.math.BigDecimal valorConvertido = new java.math.BigDecimal(precoLimpo);
 
+                    org.jsoup.nodes.Element imgElement = card.selectFirst("img");
+                    String imgUrl = "";
+                
+                    if (imgElement != null) {
+                        // O Mercado Livre costuma usar data-src para a imagem real
+                        imgUrl = imgElement.hasAttr("data-src") ? imgElement.attr("data-src") : imgElement.attr("src");
+                    }
+
                     // 2. Salva o Produto no Banco
                     fenato.projects.ComparadorPrecos.model.ProdutoLoja produto = new fenato.projects.ComparadorPrecos.model.ProdutoLoja();
                     produto.setNome(nome);
                     produto.setUrl(link);
                     produto.setSeletorCssPreco(".andes-money-amount__fraction");
+                    produto.setUrlImagem(imgUrl);
                     produtoRepo.save(produto);
 
                     // 3. Salva o Histórico de Preço vinculado a este produto

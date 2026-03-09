@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Preços - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4 text-primary">🎮 Vitrine de Produtos</h1>
+        <p class="text-center text-muted">Acompanhamento dos produtos rastreados no banco de dados.</p>
+        
+        <div class="card shadow">
+            <div class="card-body">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Foto</th> <th scope="col">Nome do Produto</th>
+                            <th scope="col" class="text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="produto : ${produtos}">
+                            <td th:text="${produto.id}" class="fw-bold">1</td>
+                            <td>
+                                <img th:src="${produto.urlImagem}" alt="Foto do Produto" 
+                                     class="img-thumbnail" style="width: 80px; height: 80px; object-fit: contain;">
+                            </td>
+                            <td th:text="${produto.nome}">Nome do Produto de Exemplo</td>
+                            <td class="text-center">
+                                <a th:href="${produto.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    Abrir Anúncio
+                                </a>
+                            </td>
+                        </tr>
+                        
+                        <tr th:if="${#lists.isEmpty(produtos)}">
+                            <td colspan="3" class="text-center py-4 text-muted">
+                                Nenhum produto rastreado ainda. Dispare a varredura na API!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

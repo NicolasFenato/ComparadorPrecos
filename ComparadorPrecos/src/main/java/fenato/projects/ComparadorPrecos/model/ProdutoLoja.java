@@ -14,6 +14,9 @@ public class ProdutoLoja {
 
     @Column(length = 2048)
     private String url;
+
+    @Column(name = "url_imagem", length = 1000)
+    private String urlImagem;
     
     private String seletorCssPreco; 
 
@@ -27,6 +30,10 @@ public class ProdutoLoja {
 
     public String getUrl(){
         return url;
+    }
+
+    public String getUrlImagem (){
+        return urlImagem;
     }
 
     public String getSeletorCssPreco(){
@@ -43,6 +50,10 @@ public class ProdutoLoja {
 
     public void setUrl(String url){
         this.url = url;
+    }
+
+    public void setUrlImagem(String urlImagem){
+        this.urlImagem = urlImagem;
     }
 
     public void setSeletorCssPreco(String seletorCssPreco){
