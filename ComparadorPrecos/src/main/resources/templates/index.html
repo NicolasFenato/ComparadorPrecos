@@ -3,49 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Preços - Admin</title>
+    <title>Comparador de Preços - Vitrine</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        /* Regras para deixar os cards com tamanho uniforme e bonitos */
+        .card-img-top {
+            height: 200px;
+            object-fit: contain; /* Não amassa a foto */
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+        .card-title {
+            font-size: 0.95rem;
+            height: 2.8rem; /* Altura fixa para alinhar os botões */
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Corta o texto na segunda linha com '...' */
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .vitrine-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .vitrine-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
-    <div class="container mt-5">
-        <h1 class="text-center mb-4 text-primary">🎮 Vitrine de Produtos</h1>
-        <p class="text-center text-muted">Acompanhamento dos produtos rastreados no banco de dados.</p>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-controller text-primary"></i> OndeCompra
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
         
-        <div class="card shadow">
-            <div class="card-body">
-                <table class="table table-hover table-striped align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th scope="col">ID</th>
-                            <th scope="col">Foto</th> <th scope="col">Nome do Produto</th>
-                            <th scope="col" class="text-center">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="produto : ${produtos}">
-                            <td th:text="${produto.id}" class="fw-bold">1</td>
-                            <td>
-                                <img th:src="${produto.urlImagem}" alt="Foto do Produto" 
-                                     class="img-thumbnail" style="width: 80px; height: 80px; object-fit: contain;">
-                            </td>
-                            <td th:text="${produto.nome}">Nome do Produto de Exemplo</td>
-                            <td class="text-center">
-                                <a th:href="${produto.url}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    Abrir Anúncio
-                                </a>
-                            </td>
-                        </tr>
-                        
-                        <tr th:if="${#lists.isEmpty(produtos)}">
-                            <td colspan="3" class="text-center py-4 text-muted">
-                                Nenhum produto rastreado ainda. Dispare a varredura na API!
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-6">
+                <h2 class="h4 text-dark mb-0 fw-bold">Produtos Rastreados</h2>
+                <p class="text-muted small">Monitoramento de preços em tempo real</p>
+            </div>
+            <div class="col-md-6">
+                <form class="d-flex">
+                    <input class="form-control me-2 border-0 shadow-sm" type="search" placeholder="Buscar na vitrine..." aria-label="Search">
+                    <button class="btn btn-primary shadow-sm" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
             </div>
         </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            
+            <div class="col" th:each="produto : ${produtos}">
+                <div class="card h-100 shadow-sm border-0 vitrine-card">
+                    
+                    <img th:src="${produto.urlImagem != null and !produto.urlImagem.isEmpty() ? produto.urlImagem : 'https://via.placeholder.com/200x200?text=Sem+Imagem'}" 
+                         class="card-img-top border-bottom" 
+                         alt="Imagem do Produto">
+                    
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">Mercado Livre</span>
+                            <small class="text-muted" th:text="'ID: ' + ${produto.id}">#1</small>
+                        </div>
+                        
+                        <h5 class="card-title text-dark fw-semibold" th:text="${produto.nome}">
+                            Nome do Produto de Exemplo
+                        </h5>
+                        
+                        <div class="mt-auto pt-3 d-grid gap-2">
+                            <a th:href="${produto.url}" target="_blank" class="btn btn-outline-primary btn-sm fw-bold">
+                                <i class="bi bi-shop"></i> Ir para a Loja
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-center py-5" th:if="${#lists.isEmpty(produtos)}">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <h4 class="text-muted mt-3">Nenhum produto cadastrado ainda.</h4>
+            <p>Dispare a varredura na sua API para preencher a vitrine!</p>
+        </div>
+
     </div>
 
 </body>
