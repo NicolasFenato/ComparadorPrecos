@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+
+// Entidade de Histórico de Preço de um determinado produto
 @Entity
 public class HistoricoPreco {
 
@@ -15,10 +17,12 @@ public class HistoricoPreco {
     
     private LocalDateTime dataCaptura;
 
+    // Relação Many-To-One ( Um ProdutoLoja pode ter vários HistoricoPreco )
     @ManyToOne
     @JoinColumn(name = "produto_loja_id")
     private ProdutoLoja produtoLoja;
 
+    // Getters e Setters
     public Long getId(){
         return id;
     }

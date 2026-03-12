@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.math.BigDecimal;
 
+// Aplicação principal do Spring: ponto de partida
 @SpringBootApplication
 @EnableScheduling
 public class ComparadorPrecosApplication {
@@ -21,6 +22,7 @@ public class ComparadorPrecosApplication {
         SpringApplication.run(ComparadorPrecosApplication.class, args);
     }
 
+    // Bloco de comandos de teste rápido
     @Bean
     public CommandLineRunner testarNovaBusca(
             fenato.projects.ComparadorPrecos.service.ScraperService scraperService,

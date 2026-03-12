@@ -2,6 +2,7 @@ package fenato.projects.ComparadorPrecos.model;
 
 import jakarta.persistence.*;
 
+// Entidade de um Produto de uma loja
 @Entity
 public class ProdutoLoja {
 
@@ -18,8 +19,10 @@ public class ProdutoLoja {
     @Column(name = "url_imagem", length = 1000)
     private String urlImagem;
     
+    // Seletor CSS do Preço no site 
     private String seletorCssPreco; 
 
+    // Getters e Setters
     public Long getId(){
         return id;
     }

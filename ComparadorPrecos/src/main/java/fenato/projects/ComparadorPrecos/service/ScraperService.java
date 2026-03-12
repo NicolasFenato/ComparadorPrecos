@@ -5,16 +5,18 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 
+// Serviço: Processa informações e age de acordo com a demanda
+// Serviço de Scraping 
 @Service
 public class ScraperService {
 
+    // Extrator de preço específico - por link URL
     public BigDecimal extrairPreco(String url, String seletorCss) {
         try {
-            // 1. Finge ser um navegador real para evitar bloqueios simples
+            // Finge ser um navegador real para evitar bloqueios simples
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
@@ -26,9 +28,9 @@ public class ScraperService {
                     .header("Sec-Fetch-Site", "none")
                     .header("Sec-Fetch-User", "?1")
                     .header("Cache-Control", "max-age=0")
-                    .timeout(15000) // Dá 15 segundos para carregar e não dar erro de timeout
+                    .timeout(15000)
                     .get();
-            // 2. Busca o elemento no HTML usando o seletor CSS
+            // Busca o elemento no HTML usando o seletor CSS
             Element elementoPreco = doc.selectFirst(seletorCss);
 
             if (elementoPreco != null) {
@@ -45,9 +47,9 @@ public class ScraperService {
         }
     }
 
-    // 3. Método auxiliar para transformar "R$ 1.500,99" ou "1.500,99" em um BigDecimal 1500.99
+    // Método usado para converter preço para BigDecimal ( R$1900,50 -> 1900.50)
     private BigDecimal limparEConverterPreco(String precoTexto) {
-        // Remove "R$", espaços e pontos de milhar. Troca a vírgula decimal por ponto.
+        
         String precoLimpo = precoTexto.replaceAll("[^0-9,]", "").replace(",", ".");
         
         try {
@@ -58,16 +60,19 @@ public class ScraperService {
         }
     }
 
+    // Metodo de scraping de uma página de busca do Mercado Livre
     public void varrerBuscaMercadoLivre(String termoBusca, 
-                                        fenato.projects.ComparadorPrecos.repository.ProdutoLojaRepository produtoRepo, 
-                                        fenato.projects.ComparadorPrecos.repository.HistoricoPrecoRepository historicoRepo) {
+        fenato.projects.ComparadorPrecos.repository.ProdutoLojaRepository produtoRepo, 
+        fenato.projects.ComparadorPrecos.repository.HistoricoPrecoRepository historicoRepo) {
         
+        // Preparando URL no modelo "https://lista.mercadolivre.com.br/teclado-mecanico"
         String buscaFormatada = termoBusca.replace(" ", "-").toLowerCase();
         String urlBusca = "https://lista.mercadolivre.com.br/" + buscaFormatada;
 
         System.out.println("\n[SCRAPER] Navegando para: " + urlBusca);
 
         try {
+            // Finge ser um navegador real para evitar bloqueios simples
             Document doc = Jsoup.connect(urlBusca)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
@@ -79,37 +84,39 @@ public class ScraperService {
                     .header("Sec-Fetch-Site", "none")
                     .header("Sec-Fetch-User", "?1")
                     .header("Cache-Control", "max-age=0")
-                    .timeout(15000) // Dá 15 segundos para carregar e não dar erro de timeout
+                    .timeout(15000)
                     .get();
 
+            // Mensagens de DEBUG no terminal ( ver se a classe do seletor de cards de produto existe )
             System.out.println("[DEBUG] Título da página: " + doc.title());
             System.out.println("[DEBUG] O HTML baixado pelo robô tem a classe? " + doc.html().contains("ui-search-layout__item"));
 
+            // Lista os produtos encontrados nos cards pela classe de seleção
             Elements cardsDeProduto = doc.select(".ui-search-layout__item");
             System.out.println("[SCRAPER] Encontramos " + cardsDeProduto.size() + " produtos! Salvando no Neon DB...");
 
+            // Para cada card extraído da página...
             for (Element card : cardsDeProduto) {
+                //... pega o nome, o link e o preço do produto
                 String nome = card.select("h2, h3, .ui-search-item__title, .poly-component__title").text();
                 Element tagLink = card.select("a").first();
                 String link = (tagLink != null) ? tagLink.attr("href") : "";
-                
                 Element tagPreco = card.select(".andes-money-amount__fraction").first();
                 String precoTexto = (tagPreco != null) ? tagPreco.text() : "0";
 
+                // Se o nome não é vazio e o preço não é nulo ...
                 if (!nome.isEmpty() && !precoTexto.equals("0")) {
-                    // 1. Converte o texto "4.850" para um número de verdade: 4850.00
+                    // ... limpa o preço e pega a imagem do produto
                     String precoLimpo = precoTexto.replace(".", "").replace(",", ".");
                     java.math.BigDecimal valorConvertido = new java.math.BigDecimal(precoLimpo);
-
                     org.jsoup.nodes.Element imgElement = card.selectFirst("img");
                     String imgUrl = "";
                 
                     if (imgElement != null) {
-                        // O Mercado Livre costuma usar data-src para a imagem real
                         imgUrl = imgElement.hasAttr("data-src") ? imgElement.attr("data-src") : imgElement.attr("src");
                     }
 
-                    // 2. Salva o Produto no Banco
+                    // Salva produto no banco utilizando a entidade ProdutoLoja
                     fenato.projects.ComparadorPrecos.model.ProdutoLoja produto = new fenato.projects.ComparadorPrecos.model.ProdutoLoja();
                     produto.setNome(nome);
                     produto.setUrl(link);
@@ -117,7 +124,7 @@ public class ScraperService {
                     produto.setUrlImagem(imgUrl);
                     produtoRepo.save(produto);
 
-                    // 3. Salva o Histórico de Preço vinculado a este produto
+                    // Salva historico de preco do produto no banco utilizando a entidade HistoricoPreco
                     fenato.projects.ComparadorPrecos.model.HistoricoPreco historico = new fenato.projects.ComparadorPrecos.model.HistoricoPreco();
                     historico.setProdutoLoja(produto);
                     historico.setValor(valorConvertido);

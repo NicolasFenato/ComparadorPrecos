@@ -6,11 +6,12 @@ import fenato.projects.ComparadorPrecos.repository.HistoricoPrecoRepository;
 import fenato.projects.ComparadorPrecos.repository.ProdutoLojaRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// Serviço: Processa informações e age de acordo com a demanda
+// Serviço de agendamento do scraping diário ( Worker )
 @Service
 public class AgendadorScraping {
 
@@ -27,21 +28,22 @@ public class AgendadorScraping {
         this.scraperService = scraperService;
     }
 
+    // Agendamento para 03:00 no fuso-horário de São Paulo
     @Scheduled(cron = "0 0 3 * * *", zone = "America/Sao_Paulo")
     public void atualizarPrecosAutomaticamente() {
         System.out.println("\n[WORKER] Iniciando varredura de preços: " + LocalDateTime.now());
 
-        // 1. Busca todos os produtos que estão na tabela produto_loja
+        // Busca todos os produtos que estão na tabela produto_loja
         List<ProdutoLoja> produtos = produtoLojaRepository.findAll();
 
-        // 2. Faz um loop (repetição) passando por cada produto encontrado
+        // Faz um loop (repetição) passando por cada produto encontrado
         for (ProdutoLoja produto : produtos) {
             System.out.println("-> Verificando: " + produto.getUrl());
 
-            // 3. Usa o nosso serviço do Jsoup para capturar o preço na internet
+            // Usa o nosso serviço do Jsoup para capturar o preço na internet
             BigDecimal precoCapturado = scraperService.extrairPreco(produto.getUrl(), produto.getSeletorCssPreco());
 
-            // 4. Se achou o preço, salva no histórico!
+            // Se achou o preço, salva no histórico
             if (precoCapturado != null) {
                 HistoricoPreco historico = new HistoricoPreco();
                 historico.setValor(precoCapturado);
